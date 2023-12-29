@@ -2,7 +2,9 @@ from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.udp_client import SimpleUDPClient
 from pythonosc.dispatcher import Dispatcher
 import asyncio
+import math
 
+import random
 """
 pip install python-osc
 """
@@ -24,20 +26,49 @@ dispatcher = Dispatcher()
 # dispatcher.map("*", update_handler)
 dispatcher.set_default_handler(update_handler)
 
-client = SimpleUDPClient("192.168.0.232", 1339)
+client = SimpleUDPClient("192.168.0.232", 22223)
 
 ip = "0.0.0.0"
 port = 10000
 
 
+light_parameters = {
+    "intensity": 1.0,
+    "color": 0.5,
+    "frost": 1,
+}
+
+
 def send():
-    for i in range(1, 21):
-        client.send_message(f"/light{i}/xpos", values[TRACKER_X])
-        client.send_message(f"/light{i}/ypos", values[TRACKER_Y])
-        client.send_message(f"/light{i}/intensity", 1.0)
-        client.send_message(f"/light{i}/color", 0.5)
-        client.send_message(f"/light{i}/frost", 1)
+    MAX_RANGE = 21
+    for i in range(1, MAX_RANGE):
+
+        DELTA = 1
+        variation = random.randint(-DELTA, DELTA)/100
+
+        new_intensity = light_parameters["intensity"] + \
+            (light_parameters["intensity"] * variation)
+        new_color = light_parameters["color"] + \
+            (light_parameters["color"] * variation)
+        new_frost = light_parameters["frost"] + \
+            (light_parameters["frost"] * variation)
+
+        angle = 360/MAX_RANGE
+        position_x = values[TRACKER_X] + math.cos(angle * i) * 2
+        position_y = values[TRACKER_X] + math.sin(angle * i) * 2
+        print(f"Debugging X: {position_x}")
+        print(f"Debugging Y: {position_y}")
+
+        client.send_message(f"/light{i}/xpos", position_x)
+        client.send_message(f"/light{i}/ypos", position_y)
+        client.send_message(f"/light{i}/intensity", new_intensity)
+        client.send_message(f"/light{i}/color", new_color)
+        client.send_message(f"/light{i}/frost", new_frost)
         client.send_message(f"/light{i}/height", 0.0)
+
+        light_parameters["intensity"] = new_intensity
+        light_parameters["color"] = new_color
+        light_parameters["frost"] = new_frost
 
 
 async def loop():
@@ -49,8 +80,10 @@ async def loop():
 
 async def init_main():
     # noinspection PyTypeChecker
-    server = AsyncIOOSCUDPServer((ip, port), dispatcher, asyncio.get_event_loop())
-    transport, protocol = await server.create_serve_endpoint()  # Create datagram endpoint and start serving
+    server = AsyncIOOSCUDPServer(
+        (ip, port), dispatcher, asyncio.get_event_loop())
+    # Create datagram endpoint and start serving
+    transport, protocol = await server.create_serve_endpoint()
 
     await loop()  # Enter main loop of program
 
