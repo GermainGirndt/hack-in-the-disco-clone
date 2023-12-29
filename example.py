@@ -26,7 +26,7 @@ dispatcher = Dispatcher()
 # dispatcher.map("*", update_handler)
 dispatcher.set_default_handler(update_handler)
 
-client = SimpleUDPClient("192.168.0.232", 22223)
+client = SimpleUDPClient("192.168.0.232", 14577)
 
 ip = "0.0.0.0"
 port = 10000
