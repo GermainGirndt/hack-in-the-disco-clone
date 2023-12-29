@@ -53,9 +53,9 @@ def send():
         new_frost = light_parameters["frost"] + \
             (light_parameters["frost"] * variation)
 
-        angle = 360/MAX_RANGE
-        position_x = values[TRACKER_X] + math.cos(angle * i) * 2
-        position_y = values[TRACKER_X] + math.sin(angle * i) * 2
+        angle = 360/MAX_RANGE * i
+        position_x = values[TRACKER_X] + math.cos(angle) * 2
+        position_y = values[TRACKER_Y] + math.sin(angle) * 2
         print(f"Debugging X: {position_x}")
         print(f"Debugging Y: {position_y}")
 
